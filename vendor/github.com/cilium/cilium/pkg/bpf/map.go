@@ -356,7 +356,6 @@ func (m *Map) Dump(parser DumpParser, cb DumpCallback) error {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 
-	key := make([]byte, m.KeySize)
 	nextKey := make([]byte, m.KeySize)
 	value := make([]byte, m.ValueSize)
 
@@ -364,10 +363,11 @@ func (m *Map) Dump(parser DumpParser, cb DumpCallback) error {
 		return err
 	}
 
+        keyPointer := unsafe.Pointer(nil);
 	for {
 		err := GetNextKey(
 			m.fd,
-			unsafe.Pointer(&key[0]),
+			keyPointer,
 			unsafe.Pointer(&nextKey[0]),
 		)
 
@@ -393,8 +393,7 @@ func (m *Map) Dump(parser DumpParser, cb DumpCallback) error {
 		if cb != nil {
 			cb(k, v)
 		}
-
-		copy(key, nextKey)
+		keyPointer = unsafe.Pointer(&nextKey[0])
 	}
 	return nil
 }
